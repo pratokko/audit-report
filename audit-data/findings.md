@@ -66,3 +66,36 @@ function testRedeemAfterFlashLoan() public setAllowedToken hasDeposits {
         token.safeTransferFrom(msg.sender, address(assetToken), amount);
     }
 ```
+
+### [M - 2] Using Tswap as price oracle leads to price and oracle manupulation attack.
+
+**Description:**  The Tswap protocol is a constant product formula based AMM (automated market maker). The price of a token is determined by how many reserves are on either side of the pool. Because of this, it is easy for malicious users to manipulate the price of a token buying and selling a large amount of the token in the same transaction, essentially ignoring protocol fees.
+
+**Impact:** Liquidity providers get drastically reduced fees for providing liquidity.
+
+**Proof of Concept:**
+
+All the code below happens in one transaction
+
+1. User takes a flash loan from `ThunderLoan` for 1000 `tokenA`. they are charged the original fee `fee1`. During the flash loan, they do the following
+
+        1. user sells 1000 `tokenA`, tanking the price,
+        2. instead of repaying right away the user takes out another flash loan for another 1000 `tokenA`.
+           1. Due to the fact that the way `ThunderLoan` calculates price based on `TswapPool` this second flash Loan is substantially cheaper
+
+
+```javascript
+function getPriceInWeth(address token) public view returns (uint256) {
+        address swapPoolOfToken = IPoolFactory(s_poolFactory).getPool(token);
+        return ITSwapPool(swapPoolOfToken).getPriceOfOnePoolTokenInWeth();
+    }
+
+        3. then the user repays the first flashloan and repays  the second flash loan
+
+I have created a POC in the ThunderloanTest.t.sol testOraclemanipulation
+
+**Recommended MItigation:** Consider using a different price oracle mechanism like a chainlink price feed with a Uniswap TWAP fallback oracle.
+
+
+
+```
