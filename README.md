@@ -1,5 +1,5 @@
 
-### This code was audited and the report of the final audit was sunbmitted you can check the whole audit report in report.md file
+### This code was audited and the report of the final audit was submitted you can check the whole audit report in report.md file
 
 # Thunder Loan
 <br/>
